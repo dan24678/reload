@@ -9,11 +9,11 @@
 DEFAULT_DIR='/tmp'
 
 # Default command. Editable.
-DEFAULT_CMD="refresh_chrome"
+DEFAULT_CMD="reload_chrome"
 
 # Do not edit these
 PRESET_CMD[0]=$DEFAULT_CMD
-PRESET_CMD[1]='Select browser(s) to refresh'
+PRESET_CMD[1]='Select browser(s) to reload'
 
 # Enter additional preset commands here
 PRESET_CMD[2]='make test'
@@ -22,7 +22,7 @@ PRESET_CMD[2]='make test'
 PRESET_CMD[9]='Enter a custom command'
 
 # If include/exclude is specified with no arguments, this is the default
-DEFAULT_INCLUDE_REGEX='(php|cfg|ini|js|txt|csv|py|txt|html|rb|feature|README|scss)$'
+DEFAULT_INCLUDE_REGEX='(php|cfg|ini|js|txt|csv|py|htm|json|yaml|ctp|html|rb|feature|md|css)$'
 DEFAULT_EXCLUDE_REGEX='cache'
 
 BROWSER[0]='chrome'
@@ -46,22 +46,22 @@ control_c()
 }
 trap control_c SIGINT
 
-refresh_chrome()
+reload_chrome()
 {
   osascript -e 'tell application "Google Chrome"' -e 'reload active tab of window 1' -e 'end tell'
 }
 
-refresh_firefox()
+reload_firefox()
 {
   osascript -e 'tell application "Firefox"' -e 'activate' -e 'end tell' -e 'tell application "System Events"' -e 'tell process "Firefox"' -e 'keystroke "r" using {command down}' -e 'end tell' -e 'end tell'
 }
 
-refresh_safari()
+reload_safari()
 {
   osascript -e 'tell application "Safari"' -e 'set docUrl to URL of document 1' -e 'set URL of document 1 to docUrl' -e 'end tell'
 }
 
-refresh_opera()
+reload_opera()
 {
   osascript -e 'tell application "Opera"' -e 'activate' -e 'end tell' -e 'tell application "System Events"' -e 'tell process "Opera"' -e 'keystroke "r" using {command down}' -e 'end tell' -e 'end tell'
 }
@@ -149,7 +149,7 @@ elif [[ $commandarg =~ [0-9,\w]+ || $commandarg == "" ]] ; then
     done
     read whichbrowser
     #browsername="${BROWSER[$whichbrowser]}"
-    #cmd="refresh_$browsername"
+    #cmd="reload_$browsername"
   elif [[ $commandarg == "9" ]] ; then
     # Custom command
     echo "Enter your custom command"
@@ -161,32 +161,32 @@ else
   cmd="$commandarg"
 fi
 
-# Lastly, build list of browsers to refresh
+# Lastly, build list of browsers to reload
 # TODO: Make this code not lame
 if [ -n "$whichbrowser" ] ; then
   cmd=""
   if [[ $whichbrowser =~ 0 ]] ; then
-    cmd="refresh_chrome"
+    cmd="reload_chrome"
   fi
   if [[ $whichbrowser =~ 1 ]] ; then
     if [[ $cmd == "" ]] ; then
-      cmd="refresh_firefox";
+      cmd="reload_firefox";
     else
-      cmd="$cmd ; refresh_firefox"
+      cmd="$cmd ; reload_firefox"
     fi
   fi
   if [[ $whichbrowser =~ 2 ]] ; then
     if [[ $cmd == "" ]] ; then
-      cmd="refresh_safari";
+      cmd="reload_safari";
     else
-      cmd="$cmd ; refresh_safari"
+      cmd="$cmd ; reload_safari"
     fi
   fi
   if [[ $whichbrowser =~ 3 ]] ; then
     if [[ $cmd == "" ]] ; then
-      cmd="refresh_opera";
+      cmd="reload_opera";
     else
-      cmd="$cmd ; refresh_opera"
+      cmd="$cmd ; reload_opera"
     fi
   fi
 fi
