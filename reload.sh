@@ -1,13 +1,18 @@
 #!/bin/bash
 
-DEFAULT_DIR='~/git/portal' # '/tmp' #
-POST_REFRESH_SLEEP='sleep 1'
+#####
+## Shell script to facilitate easy reloading of a browser or unit tests when
+## a monitored directory changes. See https://github.com/DrLongGhost/reload
+#####
+
+# Default directory to monitor
+DEFAULT_DIR='/tmp'
 
 # Default command. Editable.
-PRESET_CMD[0]='Refresh Chrome'
-DEFAULT_CMD="refresh_chrome" # 'echo "foo"' #
+DEFAULT_CMD="refresh_chrome"
 
-# Do not edit this one
+# Do not edit these
+PRESET_CMD[0]=$DEFAULT_CMD
 PRESET_CMD[1]='Select browser(s) to refresh'
 
 # Enter additional preset commands here
@@ -17,8 +22,8 @@ PRESET_CMD[2]='make test'
 PRESET_CMD[9]='Enter a custom command'
 
 # If include/exclude is specified with no arguments, this is the default
-DEFAULT_INCLUDE_REGEX='(php|cfg|ini|js|txt|csv|py|txt|html|rb|feature|README)$'
-DEFAULT_EXCLUDE_REGEX='(xml)$'
+DEFAULT_INCLUDE_REGEX='(php|cfg|ini|js|txt|csv|py|txt|html|rb|feature|README|scss)$'
+DEFAULT_EXCLUDE_REGEX='cache'
 
 BROWSER[0]='chrome'
 BROWSER[1]='firefox'
@@ -64,6 +69,9 @@ refresh_opera()
 function HELP {
   echo -e \\n"Option -d allows you to specify the directory to monitor"\\n
   echo -e \\n"Option -c allows you to specify the command to run"\\n
+  echo -e \\n"Option -i allows you to specify a match pattern of file paths to include (whitelist)"\\n
+  echo -e \\n"Option -e allows you to specify a match pattern of file paths to exclude (blacklist)"\\n
+  echo -e \\n"For complete usage instructions, see https://github.com/DrLongGhost/reload"\\n
   exit 1
 }
 
@@ -82,7 +90,7 @@ while getopts :c:d:i:e:h FLAG; do
       if [[ $OPTARG == "" ]] ; then
         OPT_I="$DEFAULT_INCLUDE_REGEX"
       fi
-      fsw_arg="-E -I -i '${OPT_I}'"
+      fsw_arg="-E -I -i '${OPT_I}' -e '.'"
       ;;
     e)  #set option "e"
       OPT_E=$OPTARG
@@ -134,7 +142,7 @@ elif [[ $commandarg =~ [0-9,\w]+ || $commandarg == "" ]] ; then
     cmd="$DEFAULT_CMD"
   elif [[ $commandarg == "1" ]] ; then 
     # Select browser
-    echo "Which browser?"
+    echo "Which browser(s)?"
     for i in "${!BROWSER[@]}"
     do
       printf "%s: %s\n" "$i" "${BROWSER[$i]}"
@@ -183,9 +191,7 @@ if [ -n "$whichbrowser" ] ; then
   fi
 fi
 
-~/bin/test-reload.sh &
-
-fullcommand="fswatch $fsw_arg $fswatchargs $monitordir | (while read event; do echo \$event; $cmd ; break ; done)"
+fullcommand="fswatch $fsw_arg $monitordir | (while read event; do echo \$event; $cmd ; done)"
 echo "$fullcommand"
 
 while :
