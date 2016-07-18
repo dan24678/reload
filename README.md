@@ -30,7 +30,7 @@ flag:
 When the program prompts you to enter a directory, hitting enter without entering
 a value will automatically use the default. The default is determined by the value
 of the DEFAULT_DIR shell variable in the script, which you can change to your
-liking.
+liking. The default DEFAULT_DIR is '.'
 
 
 ### Command (-c)
@@ -54,8 +54,18 @@ your browser(s) or you can supply the numeric shortcuts via the -c flag:
 Also, there are named functions for the browser refresh commands which can also
 be referenced:
 
-> reload.sh -c 'reload\_safari ; reload\_opera
+> reload.sh -c 'reload\_safari ; reload\_opera'
 
+You can trigger as many browser refreshes as you want. Note that it is only the
+active tab in each browser that will be reloaded. Full list of supported browser commands:
+
+> 0 or reload\_chrome
+
+> 1 or reload\_firefox
+
+> 2 or reload\_safari
+
+> 3 or reload\_opera
 
 
 ### Include (-i)
@@ -70,14 +80,13 @@ As a result of supplying the above arguments, file changes to ~/git/widget.js
 would trigger the "make test" command but file changes to ~/git/README.md would
 not.
 
-It is also possible to set up a default regular expression to be used
-when the -i flag is passed with an empty argument:
+By default, the DEFAULT\_INCLUDE\_REGEX regular expression is used to
+only run the configured command when relevant JS, PHP, HTML, etc. files are changed.
+If you work in Ruby, Java or other languages not yet represented in DEFAULT\_INCLUDE\_REGEX,
+you will want to add the desired file extensions into the regex.
 
-> reload.sh -i ''
-
-The above command would use the regular expression defined in the
-DEFAULT\_INCLUDE\_REGEX shell variable in the script, which can be customized
-to your liking.
+Alternately, you can set the ALWAYS\_USE\_DEFAULT\_REGEX value to "0" to
+modify the behavior to no longer ignore non-matching files by default.
 
 ### Exclude (-e)
 
@@ -108,4 +117,13 @@ will automatically re-run the command (provided the terminal has focus). Since
 control-c needs to also allow the user to exit reload.sh once it is running, logic
 was added so that hitting control-c TWICE (within 1 second) will exit the script
 rather than simply re-run the command again.
+
+### Changelog
+
+2016-07-18: 
+
+* The default option when prompted is now "custom command"
+* Prior 5 commands from ~/.bash_history are shown as choices in the prompt
+* Any custom command that is typed in will be manually appended to ~/.bash_history
+ 
 

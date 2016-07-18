@@ -6,7 +6,7 @@
 #####
 
 # Default directory to monitor
-DEFAULT_DIR='/tmp'
+DEFAULT_DIR='.'
 
 # Default command. Editable.
 DEFAULT_CMD="reload_chrome"
@@ -18,12 +18,25 @@ PRESET_CMD[1]='Select browser(s) to reload'
 # Enter additional preset commands here
 PRESET_CMD[2]='make test'
 
+# Populate last 5 commands from bash history
+PRESET_CMD[4]=`cat ~/.bash_history | tail -1 | head -1`
+PRESET_CMD[5]=`cat ~/.bash_history | tail -2 | head -1`
+PRESET_CMD[6]=`cat ~/.bash_history | tail -3 | head -1`
+PRESET_CMD[7]=`cat ~/.bash_history | tail -4 | head -1`
+PRESET_CMD[8]=`cat ~/.bash_history | tail -5 | head -1`
+
 # Do not edit this one
 PRESET_CMD[9]='Enter a custom command'
 
 # If include/exclude is specified with no arguments, this is the default
 DEFAULT_INCLUDE_REGEX='(php|cfg|ini|js|txt|csv|py|htm|json|yaml|ctp|html|rb|feature|md|css)$'
-DEFAULT_EXCLUDE_REGEX='cache'
+
+# When ALWAYS_USE_DEFAULT_REGEX is set to "1", the script will always use the DEFAULT_INCLUDE_REGEX.
+# This flag eliminates the need to specify: -i ''
+# to get the DEFAULT_INCLUDE_REGEX to be recognized.
+ALWAYS_USE_DEFAULT_REGEX=1
+
+DEFAULT_EXCLUDE_REGEX='(tmp|cache|\.log)'
 
 BROWSER[0]='chrome'
 BROWSER[1]='firefox'
@@ -44,7 +57,6 @@ control_c()
     last_time=$now;
   fi
 }
-trap control_c SIGINT
 
 reload_chrome()
 {
@@ -113,6 +125,10 @@ while getopts :c:d:i:e:h FLAG; do
   esac
 done
 
+if [[ $fsw_arg == "" && $ALWAYS_USE_DEFAULT_REGEX == 1 ]] ; then
+  fsw_arg="-E -I -i '${DEFAULT_INCLUDE_REGEX}' -e '.'"
+fi
+
 # Prompt to get the directory, if needed
 if [[ -z "$OPT_D" ]] ; then
   echo "What directory do you want to monitor?"
@@ -127,9 +143,13 @@ if [[ -z "$OPT_C" ]] ; then
   echo "What command do you wish to run? Pick a preset or enter a custom command."
   for i in "${!PRESET_CMD[@]}"
   do
-    printf "%s: %s\n" "$i" "${PRESET_CMD[$i]}"
+    if [[ $i == "14" ]] ; then
+      printf "%s: %s\n" "$i" `${PRESET_CMD[$i]}`
+    else
+      printf "%s: %s\n" "$i" "${PRESET_CMD[$i]}"
+    fi;
   done
-  read -e -p "[0]" commandarg;
+  read -e -p "[9]" commandarg;
 else
   commandarg="$OPT_C";
 fi
@@ -137,10 +157,10 @@ fi
 if [[ $commandarg =~ [0-9,\w]+ && -n "$OPT_C" ]] ; then
   whichbrowser="$OPT_C"
 elif [[ $commandarg =~ [0-9,\w]+ || $commandarg == "" ]] ; then
-  if [[ $commandarg == "0" || $commandarg == "" ]] ; then 
+  if [[ $commandarg == "0" ]] ; then
     # Default browser setting
     cmd="$DEFAULT_CMD"
-  elif [[ $commandarg == "1" ]] ; then 
+  elif [[ $commandarg == "1" ]] ; then
     # Select browser
     echo "Which browser(s)?"
     for i in "${!BROWSER[@]}"
@@ -150,10 +170,11 @@ elif [[ $commandarg =~ [0-9,\w]+ || $commandarg == "" ]] ; then
     read whichbrowser
     #browsername="${BROWSER[$whichbrowser]}"
     #cmd="reload_$browsername"
-  elif [[ $commandarg == "9" ]] ; then
+  elif [[ $commandarg == "9" || $commandarg == "" ]] ; then
     # Custom command
     echo "Enter your custom command"
     read -e cmd
+    echo "${cmd}" >> ~/.bash_history
   else
     cmd="${PRESET_CMD[$commandarg]}"
   fi;
@@ -193,9 +214,9 @@ fi
 
 fullcommand="fswatch $fsw_arg $monitordir | (while read event; do echo \$event; $cmd ; done)"
 echo "$fullcommand"
+trap control_c SIGINT
 
 while :
   do
     eval $fullcommand
 done
-
