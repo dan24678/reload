@@ -1,6 +1,6 @@
 # reload.sh Overview
 
-reload.sh is a shell script for OS-X that aids in refreshing browsers or running tests when files
+**reload.sh** is a shell script for OS-X that aids in refreshing browsers or running tests when files
 in a monitored directory change. This script is basically a convenience wrapper
 around fswatch ([https://github.com/emcrisostomo/fswatch](https://github.com/emcrisostomo/fswatch)). It requires fswatch
 be installed as a dependency. On OS-X, fswatch can be installed via either macports or homebrew:
@@ -13,12 +13,17 @@ be installed as a dependency. On OS-X, fswatch can be installed via either macpo
 > $ brew install fswatch
 
 
-reload.sh is designed to be easy to use. Once installed, you can run the script
+**reload.sh** is designed to be easy to use. Once installed, you can run the script
 without any arguments and it will prompt you for the name of the directory to
 monitor and ask whether you want to run a command or refresh specific browsers
-when files in the monitored directory have changed. 
+when files in the monitored directory have changed.
 
-Each supported argument/feature is explained below.
+Additionally, **watch.sh** is provided as a complimentary script to provide a method
+for auto-running a command when files have been changed in a directory that
+cannot be directly monitored due to an NFS file share on a (vagrant) VM
+preventing direct monitoring with fswatch. This workaround is described in **Proxy Workaround** below.
+
+Supported arguments/features of **reload.sh** are as follows.
 
 ### Directory (-d)
 Specifies the directory which should be monitored. You will be prompted by the
@@ -118,12 +123,31 @@ control-c needs to also allow the user to exit reload.sh once it is running, log
 was added so that hitting control-c TWICE (within 1 second) will exit the script
 rather than simply re-run the command again.
 
+### Proxy Workaround for NFS/Vagrant/VM directories with watch.sh
+
+1. Create a file which will be used to proxy between your host OS and your guest OS.
+This file needs to be outside the directory you want to monitor. Example: **touch ~/src/tmp/monitor.file**
+
+2. Run reload.sh on your host OS with a command that updates the file with random
+contents every time changes in your monitored directory are detected.
+Example: **reload.sh -c 'echo $RANDOM > ~/src/tmp/monitor.file' -d /monitored/directory**
+
+3. Run watch.sh on your guest OS to run the desired command every time the monitored
+file changes.
+Example: **watch.sh -f '/mounted/src/tmp/monitor.file' -c 'make test'**
+
+Note that **watch.sh** supports the same command-c behavior as **reload.sh**. It only takes
+two arguments ("f" for the monitor file and "c" for the command to run) and it will
+prompt for either if they are not provided directly.
+
 ### Changelog
+
+2017-06-16:
+
+* Added watch.sh to enable proxy monitoring of NFS/Vagrant/VM directories
 
 2016-07-18: 
 
 * The default option when prompted is now "custom command"
 * Prior 5 commands from ~/.bash_history are shown as choices in the prompt
 * Any custom command that is typed in will be manually appended to ~/.bash_history
- 
-
