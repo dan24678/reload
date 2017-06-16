@@ -212,7 +212,7 @@ if [ -n "$whichbrowser" ] ; then
   fi
 fi
 
-fullcommand="fswatch $fsw_arg $monitordir | (while read event; do echo \$event; $cmd ; done)"
+fullcommand="fswatch -or $fsw_arg $monitordir | (while read event; do echo \$event; $cmd ; done)"
 echo "$fullcommand"
 trap control_c SIGINT
 
