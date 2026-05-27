@@ -16,20 +16,31 @@ PRESET_CMD[0]=$DEFAULT_CMD
 PRESET_CMD[1]='Select browser(s) to reload'
 
 # Enter additional preset commands here
-PRESET_CMD[2]='make test'
+PRESET_CMD[2]='clear ; npm run test'
 
 # Populate last 5 commands from bash history
-PRESET_CMD[4]=`cat ~/.bash_history | tail -1 | head -1`
-PRESET_CMD[5]=`cat ~/.bash_history | tail -2 | head -1`
-PRESET_CMD[6]=`cat ~/.bash_history | tail -3 | head -1`
-PRESET_CMD[7]=`cat ~/.bash_history | tail -4 | head -1`
-PRESET_CMD[8]=`cat ~/.bash_history | tail -5 | head -1`
+if [ -e "$HOME/.bash_history" ]; then
+  PRESET_CMD[4]=`cat $HOME/.bash_history | tail -1 | head -1`
+  PRESET_CMD[5]=`cat $HOME/.bash_history | tail -2 | head -1`
+  PRESET_CMD[6]=`cat $HOME/.bash_history | tail -3 | head -1`
+  PRESET_CMD[7]=`cat $HOME/.bash_history | tail -4 | head -1`
+  PRESET_CMD[8]=`cat $HOME/.bash_history | tail -5 | head -1`
+fi
+
+# Try .zsh_history if .bash_history is not found
+if [ -e "$HOME/.zsh_history" ]; then
+  PRESET_CMD[4]=`cat $HOME/.zsh_history | tail -1 | head -1 | cut -d ';' -f 2-`
+  PRESET_CMD[5]=`cat $HOME/.zsh_history | tail -2 | head -1 | cut -d ';' -f 2-`
+  PRESET_CMD[6]=`cat $HOME/.zsh_history | tail -3 | head -1 | cut -d ';' -f 2-`
+  PRESET_CMD[7]=`cat $HOME/.zsh_history | tail -4 | head -1 | cut -d ';' -f 2-`
+  PRESET_CMD[8]=`cat $HOME/.zsh_history | tail -5 | head -1 | cut -d ';' -f 2-`
+fi
 
 # Do not edit this one
 PRESET_CMD[9]='Enter a custom command'
 
 # If include/exclude is specified with no arguments, this is the default
-DEFAULT_INCLUDE_REGEX='(php|cfg|ini|js|txt|csv|py|htm|json|yaml|ctp|html|rb|feature|md|css)$'
+DEFAULT_INCLUDE_REGEX='(ts|php|cfg|ini|js|txt|csv|py|htm|json|yaml|ctp|html|rb|feature|md|css)$'
 
 # When ALWAYS_USE_DEFAULT_REGEX is set to "1", the script will always use the DEFAULT_INCLUDE_REGEX.
 # This flag eliminates the need to specify: -i ''
@@ -51,7 +62,7 @@ control_c()
   if [ `expr $now - $last_time` -lt 2 ] ; then
     exit $?
   else
-    echo "Re-running command. Press ctl-c twice quickly to quit"
+    echo "Re-running command. Keep pressing ctl-c rapidly to quit"
     echo "$cmd"
     eval $cmd;
     last_time=$now;
@@ -212,7 +223,7 @@ if [ -n "$whichbrowser" ] ; then
   fi
 fi
 
-fullcommand="fswatch -or $fsw_arg $monitordir | (while read event; do echo \$event; $cmd ; done)"
+fullcommand="fswatch -r -E -I -i $fsw_arg -e $monitordir $monitordir | while read -r event; do (if mkdir /tmp/fswatch_npm.lock 2>/dev/null; then echo \$event; $cmd; sleep 2; rmdir /tmp/fswatch_npm.lock; fi) & done"
 echo "$fullcommand"
 trap control_c SIGINT
 
